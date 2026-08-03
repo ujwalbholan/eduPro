@@ -1,0 +1,91 @@
+name: edupro
+
+# Reuse these labels when the identity-service is added as a Compose service.
+# They keep local routing host-based and avoid committing a production domain.
+x-identity-service-traefik-labels: &identity-service-traefik-labels
+  traefik.enable: "true"
+  traefik.http.routers.identity-service.rule: "Host(`localhost`) && PathPrefix(`/identity`)"
+  traefik.http.routers.identity-service.entrypoints: web
+  traefik.http.services.identity-service.loadbalancer.server.port: "4000"
+
+services:
+  identity-postgres:
+    image: postgres:16-alpine
+    container_name: edupro-identity-postgres
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: identity_user
+      POSTGRES_PASSWORD: identity_password
+    ports:
+      - "${IDENTITY_POSTGRES_PORT:-5435}:5432"
+    volumes:
+      - identity-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_user -d identity_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - edupro-network
+
+  education-postgres:
+    image: postgres:16-alpine
+    container_name: edupro-education-postgres
+    environment:
+      POSTGRES_DB: education_db
+      POSTGRES_USER: education_user
+      POSTGRES_PASSWORD: education_password
+    ports:
+      - "${EDUCATION_POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - education-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U education_user -d education_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - edupro-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: edupro-redis
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - edupro-network
+
+  traefik:
+    image: traefik:v3.3
+    container_name: edupro-traefik
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "${TRAEFIK_DASHBOARD_PORT:-8080}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edupro-network
+
+networks:
+  edupro-network:
+    name: edupro-network
+    driver: bridge
+
+volumes:
+  identity-postgres-data:
+  education-postgres-data:
+  redis-data:

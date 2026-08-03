@@ -1,0 +1,16 @@
+{
+  "extends": "@edupro/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "noEmit": false,
+    "incremental": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
