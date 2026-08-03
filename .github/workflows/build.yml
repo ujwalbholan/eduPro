@@ -1,0 +1,63 @@
+name: Build & Push Images
+
+# Reusable workflow — builds each service's Docker image and pushes it to
+# GitHub Container Registry (ghcr.io), tagged with both the branch tag
+# passed in and the commit SHA (so any deploy can be pinned/rolled back
+# to an exact commit).
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Branch-level tag to publish (e.g. develop, main)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    name: Build & push ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: identity-service
+            context: apps/identity-service
+          - service: education-api
+            context: apps/education-api
+          - service: education-web
+            context: apps/education-web
+          - service: notification-service
+            context: services/notification-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GHCR image names must be lowercase; org/user names sometimes aren't.
+      - name: Compute lowercase owner
+        id: owner
+        run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ghcr.io/${{ steps.owner.outputs.name }}/${{ matrix.service }}:${{ inputs.tag }}
+            ghcr.io/${{ steps.owner.outputs.name }}/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
