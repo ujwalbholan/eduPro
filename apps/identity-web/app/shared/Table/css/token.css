@@ -1,0 +1,34 @@
+/**
+ * Theme tokens. Override any of these on a parent element to retheme the
+ * table without touching component code, e.g.:
+ *
+ *   .my-brand-table { --dt-accent: #7C3AED; --dt-radius: 4px; }
+ *
+ * Dark mode: add `data-dt-theme="dark"` to any ancestor of the table.
+ */
+:root {
+  --dt-bg: #fcfcfb;
+  --dt-surface: #f5f5f3;
+  --dt-fg: #16181d;
+  --dt-muted: #767a82;
+  --dt-border: #e6e7e9;
+  --dt-accent: #3452ff;
+  --dt-accent-soft: #eef1ff;
+  --dt-radius: 10px;
+  --dt-font-label:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dt-font-body:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dt-font-data:
+    ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", monospace;
+}
+
+[data-dt-theme="dark"] {
+  --dt-bg: #101114;
+  --dt-surface: #17181c;
+  --dt-fg: #ecedef;
+  --dt-muted: #8a8f98;
+  --dt-border: #26282d;
+  --dt-accent: #6c8cff;
+  --dt-accent-soft: #1b2140;
+}
