@@ -1,0 +1,176 @@
+@import "./token.css";
+
+.dt-wrap {
+  /* width: 100%; */
+  overflow-x: auto;
+  background: var(--dt-bg);
+  border: 1px solid var(--dt-border);
+  border-radius: var(--dt-radius);
+  color: var(--dt-fg);
+  font-family: var(--dt-font-body);
+}
+
+.dt-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+
+.dt-table--dense .dt-cell,
+.dt-table--dense .dt-header-cell {
+  padding: 6px 12px;
+}
+
+/* Header */
+
+.dt-header-row {
+  background: var(--dt-surface);
+}
+
+.dt-wrap--sticky .dt-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dt-header-cell {
+  padding: 11px 14px;
+  font-family: var(--dt-font-label);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dt-muted);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--dt-border);
+  box-shadow: inset 2px 0 0 transparent;
+  transition:
+    box-shadow 150ms ease,
+    color 150ms ease;
+}
+
+.dt-header-cell-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.dt-header-cell-btn:focus-visible {
+  outline: 2px solid var(--dt-accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Signature: the "tally rail" — a rule that marks the sorted column
+   through both header and body, so the sort axis is visible at a glance. */
+.dt-header-cell--sorted {
+  color: var(--dt-fg);
+  box-shadow: inset 2px 0 0 var(--dt-accent);
+}
+
+.dt-sort-icon {
+  font-size: 9px;
+  opacity: 0.55;
+  transform: translateY(-1px);
+}
+
+.dt-header-cell--sorted .dt-sort-icon {
+  opacity: 1;
+  color: var(--dt-accent);
+}
+
+/* Body */
+
+.dt-row {
+  border-bottom: 1px solid var(--dt-border);
+  transition: background-color 120ms ease;
+}
+
+.dt-row:last-child {
+  border-bottom: none;
+}
+
+.dt-row--clickable {
+  cursor: pointer;
+}
+
+.dt-row--clickable:hover {
+  background: var(--dt-surface);
+}
+
+.dt-cell {
+  padding: 11px 14px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 2px 0 0 transparent;
+  transition: box-shadow 150ms ease;
+}
+
+.dt-cell--sorted {
+  box-shadow: inset 2px 0 0 var(--dt-accent-soft);
+}
+
+.dt-cell--center {
+  text-align: center;
+}
+
+.dt-cell--right {
+  text-align: right;
+  font-family: var(--dt-font-data);
+}
+
+/* Loading */
+
+.dt-loading-row td {
+  padding: 11px 14px;
+}
+
+.dt-skeleton {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--dt-border) 25%,
+    var(--dt-surface) 37%,
+    var(--dt-border) 63%
+  );
+  background-size: 400% 100%;
+  animation: dt-shimmer 1.4s ease infinite;
+}
+
+@keyframes dt-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-skeleton {
+    animation: none;
+  }
+}
+
+/* Empty */
+
+.dt-empty td {
+  padding: 48px 14px;
+  text-align: center;
+}
+
+.dt-empty-text {
+  color: var(--dt-muted);
+  font-size: 13.5px;
+}
+
+/* Virtualized body */
+
+.dt-virtual-body {
+  overflow-y: auto;
+}
