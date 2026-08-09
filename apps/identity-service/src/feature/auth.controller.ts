@@ -6,10 +6,6 @@ export class AuthCiontroller {
     return 'okk';
   }
 
-  hello() {
-    console.log('okk');
-  }
-
   authFunction() {
     console.log('this is auth function');
   }
