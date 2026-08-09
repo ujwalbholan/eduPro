@@ -1,16 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
-@Controller()
-export class AuthCiontroller {
-  auth(): string {
-    return 'okk';
-  }
-
-  hello() {
-    console.log('okk');
-  }
-
-  authFunction() {
-    console.log('this is auth function');
+@Controller('auth')
+export class AuthController {
+  @Get()
+  auth(): { message: string; status: string } {
+    return { message: 'auth service', status: '200' };
   }
 }

@@ -5,6 +5,7 @@ import { databaseConfig, jwtConfig, redisConfig } from './config';
 import { PrismaModule } from './database/prisma.module';
 import { HealthController } from './health/health.controller';
 import { RedisModule } from './redis/redis.module';
+import { AuthModule } from './feature/auth.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RedisModule } from './redis/redis.module';
     }),
     PrismaModule,
     RedisModule,
+    AuthModule,
   ],
   controllers: [HealthController],
 })
