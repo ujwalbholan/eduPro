@@ -1,7 +1,7 @@
 import { TenantStatus } from '@prisma/client';
 import { z } from 'zod';
 
-export const CreateTenantSchema = z.object({
+export const TenantSchema = z.object({
   name: z
     .string()
     .trim()
@@ -17,7 +17,7 @@ export const CreateTenantSchema = z.object({
     )
     .optional(),
 
-  status: z.enum(TenantStatus).optional(),
+  status: z.enum(TenantStatus).default(TenantStatus.ACTIVE),
 });
 
-export type CreateTenantDto = z.infer<typeof CreateTenantSchema>;
+export type TenantDto = z.infer<typeof TenantSchema>;

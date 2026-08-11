@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CreateTenantDto, CreateTenantSchema } from './schema/tenant.schema';
+import { TenantDto, TenantSchema } from './schema/tenant.schema';
 import { TenantService } from './tenant.service';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 
@@ -8,9 +8,7 @@ export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
   @Post()
-  create(
-    @Body(new ZodValidationPipe(CreateTenantSchema)) tenant: CreateTenantDto,
-  ) {
+  create(@Body(new ZodValidationPipe(TenantSchema)) tenant: TenantDto) {
     return this.tenantService.create(tenant);
   }
 

@@ -4,14 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { CreateTenantDto } from './schema/tenant.schema';
+import { TenantDto } from './schema/tenant.schema';
 import { slug } from '../../utils/slug.conveter';
 
 @Injectable()
 export class TenantService {
   constructor(private readonly prism: PrismaService) {}
 
-  async create(tenant: CreateTenantDto) {
+  async create(tenant: TenantDto) {
     const domain = slug(tenant.name);
 
     const isTenantExist = await this.prism.tenant.findFirst({
