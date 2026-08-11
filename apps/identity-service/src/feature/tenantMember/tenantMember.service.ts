@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { CreateTenantMemberDto } from './schema/CreateTenantMember.schema';
 import { UpdateTenantMemberDto } from './schema/UpdateTenantMember.schema';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class TenantMemberService {
@@ -14,29 +15,55 @@ export class TenantMemberService {
 
   async addMember(tenantId: string, { userId, roleId }: CreateTenantMemberDto) {
     const [tenant, user, role] = await Promise.all([
-      this.prisma.tenant.findUnique({ where: { id: tenantId } }),
-      this.prisma.user.findUnique({ where: { id: userId } }),
-      this.prisma.role.findFirst({ where: { id: roleId, tenantId } }),
+      this.prisma.tenant.findUnique({
+        where: { id: tenantId },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+      }),
+      this.prisma.role.findFirst({
+        where: {
+          id: roleId,
+          tenantId,
+        },
+      }),
     ]);
 
-    if (!tenant) throw new NotFoundException('Tenant Not Found');
-    if (!user) throw new NotFoundException('User Not Found');
-    if (!role) throw new NotFoundException('Role Not Fount in Tenant');
+    if (!tenant) {
+      throw new NotFoundException('Tenant Not Found');
+    }
 
-    return this.prisma.tenantUser
-      .create({
-        data: { tenantId, userId, roleId },
-        include: { user: true, role: true },
-      })
-      .catch((e) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        if (e.code === 'P2002') {
+    if (!user) {
+      throw new NotFoundException('User Not Found');
+    }
+
+    if (!role) {
+      throw new NotFoundException('Role Not Found in Tenant');
+    }
+
+    try {
+      return await this.prisma.tenantUser.create({
+        data: {
+          tenantId,
+          userId,
+          roleId,
+        },
+        include: {
+          user: true,
+          role: true,
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
           throw new ConflictException(
             'User is already a member of this tenant',
           );
         }
-        throw e;
-      });
+      }
+
+      throw error;
+    }
   }
 
   async findAll(tenantUserId: string) {
@@ -85,16 +112,23 @@ export class TenantMemberService {
   async remove(tenantId: string, userId: string) {
     try {
       await this.prisma.tenantUser.delete({
-        where: { tenantId_userId: { tenantId, userId } },
+        where: {
+          tenantId_userId: {
+            tenantId,
+            userId,
+          },
+        },
       });
-    } catch (e) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if ((e as any).code === 'P2025') {
-        throw new NotFoundException(
-          `Member with tenantId ${tenantId} and userId ${userId} not found`,
-        );
+    } catch (error: unknown) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException(
+            `Member with tenantId ${tenantId} and userId ${userId} not found`,
+          );
+        }
       }
-      throw e;
+
+      throw error;
     }
 
     return {

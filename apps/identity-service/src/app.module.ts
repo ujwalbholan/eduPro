@@ -10,6 +10,7 @@ import { TenantModule } from './feature/tenant/tenant.module';
 import { UserModule } from './feature/user/User.module';
 import { RoleModule } from './feature/role/Role.module';
 import { TenantMemberModule } from './feature/tenantMember/tenantMember.module';
+import { PermissionModule } from './feature/permission/Premission.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TenantMemberModule } from './feature/tenantMember/tenantMember.module';
     UserModule,
     TenantMemberModule,
     RoleModule,
+    PermissionModule,
   ],
   controllers: [HealthController],
 })
