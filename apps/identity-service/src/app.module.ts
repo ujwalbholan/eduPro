@@ -5,6 +5,12 @@ import { databaseConfig, jwtConfig, redisConfig } from './config';
 import { PrismaModule } from './database/prisma.module';
 import { HealthController } from './health/health.controller';
 import { RedisModule } from './redis/redis.module';
+import { AuthModule } from './feature/Authentication/auth.module';
+import { TenantModule } from './feature/tenant/tenant.module';
+import { UserModule } from './feature/user/User.module';
+import { RoleModule } from './feature/role/Role.module';
+import { TenantMemberModule } from './feature/tenantMember/tenantMember.module';
+import { PermissionModule } from './feature/permission/Premission.module';
 
 @Module({
   imports: [
@@ -19,6 +25,12 @@ import { RedisModule } from './redis/redis.module';
     }),
     PrismaModule,
     RedisModule,
+    AuthModule,
+    TenantModule,
+    UserModule,
+    TenantMemberModule,
+    RoleModule,
+    PermissionModule,
   ],
   controllers: [HealthController],
 })
