@@ -1,0 +1,164 @@
+/*
+  Warnings:
+
+  - You are about to drop the column `role_id` on the `tenant_users` table. All the data in the column will be lost.
+
+*/
+-- CreateEnum
+CREATE TYPE "InstitutionType" AS ENUM ('SCHOOL', 'COLLEGE', 'UNIVERSITY', 'COACHING_CENTER', 'TUITION_CENTER', 'TRAINING_INSTITUTE', 'VOCATIONAL_INSTITUTE', 'OTHER');
+
+-- CreateEnum
+CREATE TYPE "DomainType" AS ENUM ('SYSTEM', 'CUSTOM');
+
+-- CreateEnum
+CREATE TYPE "DomainVerificationStatus" AS ENUM ('PENDING', 'VERIFIED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "InvitationStatus" AS ENUM ('PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED');
+
+-- AlterEnum
+-- This migration adds more than one value to an enum.
+-- With PostgreSQL versions 11 and earlier, this is not possible
+-- in a single migration. This can be worked around by creating
+-- multiple migrations, each migration adding only one value to
+-- the enum.
+
+
+ALTER TYPE "TenantStatus" ADD VALUE 'CREATED';
+ALTER TYPE "TenantStatus" ADD VALUE 'PENDING_SETUP';
+
+-- DropForeignKey
+ALTER TABLE "tenant_users" DROP CONSTRAINT "tenant_users_role_id_fkey";
+
+-- AlterTable
+ALTER TABLE "tenant_users" DROP COLUMN "role_id";
+
+-- AlterTable
+-- AlterTable
+ALTER TABLE "tenants" ADD COLUMN "institution_type" "InstitutionType" NOT NULL DEFAULT 'OTHER';
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "email_verified_at" TIMESTAMP(3);
+
+-- CreateTable
+CREATE TABLE "tenant_domains" (
+    "id" UUID NOT NULL,
+    "tenant_id" UUID NOT NULL,
+    "domain" TEXT NOT NULL,
+    "type" "DomainType" NOT NULL DEFAULT 'SYSTEM',
+    "is_primary" BOOLEAN NOT NULL DEFAULT false,
+    "verification_status" "DomainVerificationStatus" NOT NULL DEFAULT 'PENDING',
+    "ssl_status" TEXT,
+    "verified_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tenant_domains_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tenant_settings" (
+    "id" UUID NOT NULL,
+    "tenant_id" UUID NOT NULL,
+    "locale" TEXT NOT NULL DEFAULT 'en',
+    "timezone" TEXT NOT NULL DEFAULT 'UTC',
+    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "date_format" TEXT NOT NULL DEFAULT 'YYYY-MM-DD',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tenant_settings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tenant_themes" (
+    "id" UUID NOT NULL,
+    "tenant_id" UUID NOT NULL,
+    "primary_color" TEXT NOT NULL DEFAULT '#2563EB',
+    "secondary_color" TEXT NOT NULL DEFAULT '#0F172A',
+    "accent_color" TEXT NOT NULL DEFAULT '#F59E0B',
+    "logo_url" TEXT,
+    "favicon_url" TEXT,
+    "font_family" TEXT NOT NULL DEFAULT 'Inter',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tenant_themes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tenant_user_roles" (
+    "tenant_user_id" UUID NOT NULL,
+    "role_id" UUID NOT NULL,
+    "assigned_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "tenant_user_roles_pkey" PRIMARY KEY ("tenant_user_id","role_id")
+);
+
+-- CreateTable
+CREATE TABLE "invitations" (
+    "id" UUID NOT NULL,
+    "tenant_id" UUID NOT NULL,
+    "email" TEXT NOT NULL,
+    "role_id" UUID NOT NULL,
+    "invited_by_user_id" UUID NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "status" "InvitationStatus" NOT NULL DEFAULT 'PENDING',
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "accepted_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "invitations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tenant_domains_domain_key" ON "tenant_domains"("domain");
+
+-- CreateIndex
+CREATE INDEX "tenant_domains_tenant_id_idx" ON "tenant_domains"("tenant_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tenant_settings_tenant_id_key" ON "tenant_settings"("tenant_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tenant_themes_tenant_id_key" ON "tenant_themes"("tenant_id");
+
+-- CreateIndex
+CREATE INDEX "tenant_user_roles_role_id_idx" ON "tenant_user_roles"("role_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "invitations_token_hash_key" ON "invitations"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "invitations_tenant_id_status_idx" ON "invitations"("tenant_id", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "invitations_tenant_id_email_key" ON "invitations"("tenant_id", "email");
+
+-- CreateIndex
+CREATE INDEX "roles_tenant_id_idx" ON "roles"("tenant_id");
+
+-- AddForeignKey
+ALTER TABLE "tenant_domains" ADD CONSTRAINT "tenant_domains_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tenant_settings" ADD CONSTRAINT "tenant_settings_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tenant_themes" ADD CONSTRAINT "tenant_themes_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tenant_user_roles" ADD CONSTRAINT "tenant_user_roles_tenant_user_id_fkey" FOREIGN KEY ("tenant_user_id") REFERENCES "tenant_users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tenant_user_roles" ADD CONSTRAINT "tenant_user_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_user_id_fkey" FOREIGN KEY ("invited_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
