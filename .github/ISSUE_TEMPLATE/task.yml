@@ -1,0 +1,42 @@
+name: 📋 Task
+description: Create a task or piece of work.
+title: "[Task]: "
+labels:
+  - task
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: What needs to be done?
+      placeholder: Describe the task...
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: What needs to be true for this task to be considered complete?
+      placeholder: |
+        - Requirement 1
+        - Requirement 2
+        - Requirement 3
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
