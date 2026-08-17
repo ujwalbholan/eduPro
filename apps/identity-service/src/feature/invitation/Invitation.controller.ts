@@ -46,14 +46,14 @@ export class InvitationController {
     return this.invitationService.getOneInvitation(id);
   }
 
-  @Post(':id/revoke')
-  revokeInvitation(@Param('id') id: string) {
-    return this.invitationService.revokeInvitation(id);
+  @Post('/revoke')
+  revokeInvitation(email: string) {
+    return this.invitationService.revokeInvitation(email);
   }
 
-  @Post(':id/resend')
-  resendInviation(@Param('id') id: string) {
-    return this.invitationService.resendInvitation(id);
+  @Post('/resend')
+  resendInviation(email: string) {
+    return this.invitationService.resendInvitation(email);
   }
 }
 
