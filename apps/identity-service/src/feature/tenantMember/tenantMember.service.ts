@@ -94,7 +94,12 @@ export class TenantMemberService {
     tenantMemberData: UpdateTenantMemberDto,
   ) {
     const existing = await this.prisma.tenantUser.findUnique({
-      where: { tenantId_userId: { tenantId, userId } },
+      where: {
+        tenantId_userId: {
+          tenantId,
+          userId,
+        },
+      },
     });
 
     if (!existing) {
@@ -102,10 +107,39 @@ export class TenantMemberService {
         `Member ${userId} not found in tenant ${tenantId}`,
       );
     }
-    return await this.prisma.tenantUser.update({
-      where: { tenantId_userId: { tenantId, userId } },
-      data: { roleId: tenantMemberData.roleId },
-      include: { user: true, role: true },
+
+    if (tenantMemberData.roleId) {
+      await this.prisma.$transaction([
+        this.prisma.tenantUserRole.deleteMany({
+          where: {
+            tenantUserId: existing.id,
+          },
+        }),
+
+        this.prisma.tenantUserRole.create({
+          data: {
+            tenantUserId: existing.id,
+            roleId: tenantMemberData.roleId,
+          },
+        }),
+      ]);
+    }
+
+    return this.prisma.tenantUser.findUnique({
+      where: {
+        tenantId_userId: {
+          tenantId,
+          userId,
+        },
+      },
+      include: {
+        user: true,
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
   }
 

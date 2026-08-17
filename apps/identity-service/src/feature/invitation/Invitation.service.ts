@@ -11,6 +11,7 @@ import {
   hashInvitationToken,
   hashPassword,
 } from './utils/invitation.token';
+import { InvitationStatus } from '@prisma/client';
 
 @Injectable()
 export class InvitationService {
@@ -35,6 +36,8 @@ export class InvitationService {
       throw new NotFoundException('Role Not Found');
     }
 
+    const invitedBy = 'ujwal@gmail.com';
+
     const emailExist = await this.prisma.user.findUnique({ where: { email } });
 
     if (emailExist) {
@@ -46,8 +49,10 @@ export class InvitationService {
         tenantId,
         email,
         roleId,
-        tokenHash: 'okoko',
+        invitedByUserId: invitedBy,
+        tokenHash: 'okoko', // WIP
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        status: InvitationStatus.PENDING,
       },
     });
   }
