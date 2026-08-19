@@ -1,0 +1,46 @@
+name: verify
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  verify:
+    name: Verfiy Code
+    runs-on: ubuntu-latest
+
+    # checkout
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #install node
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Install dependencied
+      - name: Install Dependencies
+        run: npm ci
+
+      # Run Linting
+      - name: Lint
+        run: npm run lint
+
+      #Format check
+      - name: format check
+        run: npm run format:check
+
+      #Type check
+      - name: type check
+        run: npm run typecheck
