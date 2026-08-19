@@ -55,7 +55,7 @@ jobs:
 
       # 7. Format Check
       - name: Format Check
-        run: pnpm run format:check
+        run: pnpm run format
 
       # 8. Type Check
       - name: Type Check
