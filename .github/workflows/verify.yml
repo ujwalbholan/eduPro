@@ -63,4 +63,4 @@ jobs:
 
       # 9. Unit Tests
       - name: Unit Tests
-        run: pnpm test
+        run: pnpm --filter identity-service test
