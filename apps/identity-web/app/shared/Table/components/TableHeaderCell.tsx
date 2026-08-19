@@ -30,17 +30,31 @@ export function TableHeaderCell({
         classes.headerCell,
         sortable && classes.headerCellSortable,
         isSorted && classes.headerCellSorted,
-        className
+        className,
       )}
       style={{ width, textAlign: align }}
-      aria-sort={isSorted ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
+      aria-sort={
+        isSorted
+          ? sortDirection === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
       scope="col"
     >
       {sortable ? (
-        <button type="button" className="dt-header-cell-btn" onClick={onSortClick}>
+        <button
+          type="button"
+          className="dt-header-cell-btn"
+          onClick={onSortClick}
+        >
           <span>{children}</span>
           <span className={classes.sortIcon} aria-hidden="true">
-            {sortDirection === "asc" ? "▲" : sortDirection === "desc" ? "▼" : "↕"}
+            {sortDirection === "asc"
+              ? "▲"
+              : sortDirection === "desc"
+                ? "▼"
+                : "↕"}
           </span>
         </button>
       ) : (
