@@ -51,5 +51,4 @@ export function StudentsTable({
       emptyMessage="No students match your filters."
     />
   );
-} 
-
+}

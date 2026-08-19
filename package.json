@@ -7,9 +7,12 @@
     "infra:up": "docker compose -f infrastructure/docker-compose.yml up -d",
     "infra:down": "docker compose -f infrastructure/docker-compose.yml down",
     "infra:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
-    "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "typecheck": "turbo run typecheck",
+    "prisma:generate": "prisma generate",
+    "lint": "turbo run lint",
+    "format:check": "turbo run format:check",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

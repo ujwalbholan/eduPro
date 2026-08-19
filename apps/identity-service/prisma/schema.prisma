@@ -276,7 +276,7 @@ model Invitation {
   status          InvitationStatus @default(PENDING)
   expiresAt       DateTime         @map("expires_at")
   acceptedAt      DateTime?        @map("accepted_at")
-  revokedAt  DateTime? @map("revoked_at")
+  revokedAt       DateTime?        @map("revoked_at")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
@@ -341,7 +341,7 @@ model SigningKey {
   @@map("signing_keys")
 }
 
-
 // pnpm prisma formate
 // pnpm prisma validate
 // pnpm prisma migrate dev --name {message}
+//pnpm prisma generate

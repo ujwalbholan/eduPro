@@ -21,7 +21,7 @@
 
 Please tick what applies (edit the line to `[x]`):
 
-- [ ] `pnpm verify` (or equivalent: `pnpm check-types && pnpm lint`) passes locally
+- [ ] `pnpm verify` (or equivalent: `pnpm typecheck && pnpm lint`) passes locally
 - [ ] Tests added or updated where appropriate (`pnpm test` in affected workspaces)
 - [ ] Documentation updated if behavior, setup, or architecture changed
 - [ ] No unrelated refactors or drive-by changes outside this PR’s scope

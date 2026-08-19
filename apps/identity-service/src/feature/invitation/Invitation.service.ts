@@ -101,11 +101,11 @@ export class InvitationService {
   }
 
   async revokeInvitation(id: string) {
-    const invitation = (await this.prisma.invitation.findUnique({
+    const invitation = await this.prisma.invitation.findUnique({
       where: {
         id,
       },
-    })) as any;
+    });
 
     if (!invitation) {
       throw new NotFoundException('Invitation not found');
@@ -130,12 +130,11 @@ export class InvitationService {
   }
 
   async resendInvitation(id: string) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const invitation = (await this.prisma.invitation.findUnique({
+    const invitation = await this.prisma.invitation.findUnique({
       where: {
         id,
       },
-    })) as any;
+    });
 
     if (!invitation) {
       throw new NotFoundException('Invitation not found');

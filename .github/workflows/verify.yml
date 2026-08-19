@@ -1,0 +1,66 @@
+name: verify
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  verify:
+    name: Verfiy Code
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 3. Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      # 4. Setup pnpm cache
+      - name: Setup pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # 5. Install Dependencies
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter identity-service run prisma:generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # 6. Lint
+      - name: Lint
+        run: pnpm run lint
+
+      # 7. Format Check
+      - name: Format Check
+        run: pnpm run format
+
+      # 8. Type Check
+      - name: Type Check
+        run: pnpm run typecheck
+
+      # 9. Unit Tests
+      - name: Unit Tests
+        run: pnpm --filter identity-service test

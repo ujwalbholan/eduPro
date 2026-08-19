@@ -2,7 +2,11 @@ import React from "react";
 import { classes } from "../classes/Table.class";
 import { TableHeaderCell } from "./TableHeaderCell";
 import { cx, slotClass } from "../utils/utils";
-import type { ColumnDef, DataTableClassNames, SortState } from "../types/TableT";
+import type {
+  ColumnDef,
+  DataTableClassNames,
+  SortState,
+} from "../types/TableT";
 
 export interface TableHeaderProps<T> {
   columns: ColumnDef<T>[];
