@@ -8,7 +8,7 @@
     "infra:down": "docker compose -f infrastructure/docker-compose.yml down",
     "infra:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "typecheck": "turbo run check-types",
+    "typecheck": "turbo run typecheck",
     "prisma:generate": "prisma generate",
     "lint": "turbo run lint",
     "format:check": "turbo run format:check",
