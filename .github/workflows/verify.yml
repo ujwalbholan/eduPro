@@ -15,32 +15,49 @@ jobs:
     name: Verfiy Code
     runs-on: ubuntu-latest
 
-    # checkout
     steps:
+      # 1. Checkout
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      #install node
-      - name: Install Node
+      # 2. Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      # Install dependencied
+      # 3. Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      # 4. Setup pnpm cache
+      - name: Setup pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # 5. Install Dependencies
       - name: Install Dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      # Run Linting
+      # 6. Lint
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
-      #Format check
-      - name: format check
-        run: npm run format:check
+      # 7. Format Check
+      - name: Format Check
+        run: pnpm run format:check
 
-      #Type check
-      - name: type check
-        run: npm run typecheck
+      # 8. Type Check
+      - name: Type Check
+        run: pnpm run typecheck
+
+      # 9. Unit Tests
+      - name: Unit Tests
+        run: pnpm test
