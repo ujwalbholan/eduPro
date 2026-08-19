@@ -345,3 +345,4 @@ model SigningKey {
 // pnpm prisma formate
 // pnpm prisma validate
 // pnpm prisma migrate dev --name {message}
+//pnpm prisma generate
