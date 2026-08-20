@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turborepo.dev/schema.json",
+  "$schema": "https://v2-10-11.turborepo.dev/schema.json",
   "ui": "tui",
   "tasks": {
     "build": {
@@ -16,6 +16,15 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": ["dist/**"]
+    },
+    "verify": {
+      "dependsOn": ["^build", "^test", "^lint", "^typecheck"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     }
   }
 }
