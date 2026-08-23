@@ -75,7 +75,7 @@ export function TableFooter<T>({
               <button
                 type="button"
                 className={classes.paginationBtn}
-                onClick={() => onPageChange(page - 1)}
+                onClick={() => onPageChange?.(page - 1)}
                 disabled={!canPrevious}
                 aria-label="Previous page"
               >
@@ -95,7 +95,7 @@ export function TableFooter<T>({
                       classes.paginationBtn,
                       item === page && classes.paginationBtnActive,
                     )}
-                    onClick={() => onPageChange(item)}
+                    onClick={() => onPageChange?.(item)}
                     aria-current={item === page ? "page" : undefined}
                     aria-label={`Page ${item}`}
                   >
@@ -107,7 +107,7 @@ export function TableFooter<T>({
               <button
                 type="button"
                 className={classes.paginationBtn}
-                onClick={() => onPageChange(page + 1)}
+                onClick={() => onPageChange?.(page + 1)}
                 disabled={!canNext}
                 aria-label="Next page"
               >
