@@ -17,7 +17,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ toLower(github.repository) }}
+  IMAGE_NAME: ujwalbholan/edupro
 
 jobs:
   build:
@@ -54,7 +54,10 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - name: Set Local Image Tag
-        run: echo "LOCAL_IMAGE_TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:ci-${{ github.sha }}" >> "$GITHUB_ENV"
+        shell: bash
+        run: |
+          LOWERCASE_IMAGE_NAME="${IMAGE_NAME,,}"
+          echo "LOCAL_IMAGE_TAG=${REGISTRY}/${LOWERCASE_IMAGE_NAME}:ci-${GITHUB_SHA}" >> "$GITHUB_ENV"
 
       # 5. Build Docker image
       - name: Build Docker Image
