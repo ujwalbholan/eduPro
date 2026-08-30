@@ -18,6 +18,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  LOCAL_IMAGE_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:ci-${{ github.sha }}
 
 jobs:
   build:
@@ -53,6 +54,9 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      - name: Set Local Image Tag
+        run: echo "LOCAL_IMAGE_TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:ci-${{ github.sha }}" >> "$GITHUB_ENV"
+
       # 5. Build Docker image
       - name: Build Docker Image
         uses: docker/build-push-action@v6
@@ -61,16 +65,27 @@ jobs:
           file: ./apps/identity-service/Dockerfile
           push: false
           load: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ env.LOCAL_IMAGE_TAG }}
+            ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 6. Generate SBOM
+      # 6. Verify local image exists before SBOM
+      - name: Verify Local Image
+        run: |
+          docker image inspect "${LOCAL_IMAGE_TAG}" >/dev/null 2>&1 || {
+            echo "Local image ${LOCAL_IMAGE_TAG} was not created successfully.";
+            docker images --digests --format 'table {{.Repository}}:{{.Tag}}\t{{.Digest}}';
+            exit 1;
+          }
+
+      # 7. Generate SBOM
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          image: ${{ env.LOCAL_IMAGE_TAG }}
           format: spdx-json
           output-file: sbom.spdx.json
 
@@ -85,7 +100,7 @@ jobs:
       - name: Trivy Container Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          image-ref: ${{ env.LOCAL_IMAGE_TAG }}
           format: table
           exit-code: "1"
           ignore-unfixed: true
@@ -99,7 +114,9 @@ jobs:
           context: .
           file: ./apps/identity-service/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ env.LOCAL_IMAGE_TAG }}
+            ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -113,5 +130,10 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
+          IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.LOCAL_IMAGE_TAG }})
+          if [ -z "$IMAGE_DIGEST" ]; then
+            echo "No repo digest available for local image; skipping signing."
+            exit 0
+          fi
           cosign sign --yes \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }})
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${IMAGE_DIGEST}
