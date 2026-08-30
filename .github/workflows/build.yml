@@ -82,7 +82,7 @@ jobs:
 
       # 8. Container Vulnerability Scan
       - name: Trivy Container Scan
-        uses: aquasecurity/trivy-action@v4
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
           format: table
