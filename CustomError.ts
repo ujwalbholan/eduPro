@@ -11,4 +11,7 @@ export type Code = "400" | "404" | "500";
 
 export type ErrorCode = `${Feature} : ${ErrorType} : ${Code}`;
 
+
+
+
 const reportError = (e: ErrorCode) => {};
