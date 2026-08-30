@@ -271,7 +271,8 @@ model Invitation {
   tenantId        String           @map("tenant_id") @db.Uuid
   email           String
   roleId          String           @map("role_id") @db.Uuid
-  invitedByUserId String           @map("invited_by_user_id") @db.Uuid
+  invitedByUserId String?          @map("invited_by_user_id") @db.Uuid
+  invitedByEmail  String?          @map("invited_by_email")
   tokenHash       String           @unique @map("token_hash")
   status          InvitationStatus @default(PENDING)
   expiresAt       DateTime         @map("expires_at")
@@ -282,7 +283,7 @@ model Invitation {
 
   tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   role      Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  invitedBy User   @relation(fields: [invitedByUserId], references: [id], onDelete: Restrict)
+  invitedBy User?  @relation(fields: [invitedByUserId], references: [id], onDelete: Restrict)
 
   // One invitation row ever per (tenant, email) — re-inviting updates this
   // row (new token, reset expiry, status back to PENDING) rather than

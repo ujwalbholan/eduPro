@@ -36,7 +36,9 @@ export class InvitationService {
       throw new NotFoundException('Role Not Found');
     }
 
-    const invitedBy = 'ujwal@gmail.com';
+    const invitedByUser = await this.prisma.user.findUnique({
+      where: { email: 'ujwal@gmail.com' },
+    });
 
     const emailExist = await this.prisma.user.findUnique({ where: { email } });
 
@@ -44,13 +46,17 @@ export class InvitationService {
       throw new ConflictException('Email Already Exist');
     }
 
+    const token = generateInvitationToken();
+    const tokenHash = hashInvitationToken(token);
+
     return await this.prisma.invitation.create({
       data: {
         tenantId,
         email,
         roleId,
-        invitedByUserId: invitedBy,
-        tokenHash: 'okoko', // WIP
+        invitedByUserId: invitedByUser?.id ?? null,
+        invitedByEmail: invitedByUser?.email ?? 'ujwal@gmail.com',
+        tokenHash,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         status: InvitationStatus.PENDING,
       },
@@ -58,7 +64,7 @@ export class InvitationService {
   }
 
   async listInvitation(tenantId: string) {
-    return this.prisma.invitation.findMany({ where: { id: tenantId } });
+    return this.prisma.invitation.findMany({ where: { tenantId } });
   }
 
   async updateInvitation(id: string, inviationData: UpdateInvitationDto) {
