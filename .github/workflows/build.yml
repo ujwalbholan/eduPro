@@ -132,10 +132,10 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
-          IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.LOCAL_IMAGE_TAG }})
-          if [ -z "$IMAGE_DIGEST" ]; then
-            echo "No repo digest available for local image; skipping signing."
+          REMOTE_REF="${REGISTRY}/${IMAGE_NAME}:ci-${GITHUB_SHA}"
+          IMAGE_DIGEST=$(docker buildx imagetools inspect "$REMOTE_REF" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          if [ -z "$IMAGE_DIGEST" ] || [ "$IMAGE_DIGEST" = "null" ]; then
+            echo "No digest found for pushed image ${REMOTE_REF}; skipping signing."
             exit 0
           fi
-          cosign sign --yes \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${IMAGE_DIGEST}
+          cosign sign --yes "${REGISTRY}/${IMAGE_NAME}@${IMAGE_DIGEST}"
