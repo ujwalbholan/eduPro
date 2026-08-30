@@ -1,0 +1,122 @@
+name: Deploy Dev
+
+on:
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+
+    # Only deploy when the Build workflow succeeded
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'develop'
+
+    environment:
+      name: development
+
+    steps:
+      # 1. Checkout the exact commit that triggered the build
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # 2. Define immutable image
+      - name: Set Image
+        run: |
+          echo "IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_ENV"
+
+      # 3. Login to GHCR
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Verify image exists
+      - name: Verify Image
+        run: |
+          docker manifest inspect "$IMAGE"
+
+      # 5. Pull image
+      - name: Pull Image
+        run: |
+          docker pull "$IMAGE"
+
+      # 6. Verify image
+      - name: Verify Image Digest
+        run: |
+          docker inspect "$IMAGE" \
+            --format='Image digest: {{index .RepoDigests 0}}'
+
+      # ==========================================================
+      # DEPLOYMENT
+      # ==========================================================
+
+      # Replace this step with your actual deployment platform.
+      #
+      # Examples:
+      #
+      # Kubernetes:
+      #   kubectl set image deployment/identity-service \
+      #     identity-service=$IMAGE \
+      #     -n development
+      #
+      # Docker Compose:
+      #   export IMAGE=$IMAGE
+      #   docker compose -f docker-compose.dev.yml up -d
+      #
+      # ECS:
+      #   aws ecs update-service ...
+      #
+      # Azure Container Apps:
+      #   az containerapp update ...
+      #
+      # GCP Cloud Run:
+      #   gcloud run deploy ...
+
+      - name: Deploy to Development
+        run: |
+          echo "Deploying $IMAGE to Development..."
+          echo "TODO: Replace this step with your deployment command."
+
+      # ==========================================================
+      # SMOKE TEST
+      # ==========================================================
+
+      - name: Wait for Deployment
+        run: |
+          echo "Waiting for development deployment..."
+          sleep 15
+
+      - name: Smoke Test
+        run: |
+          curl --fail --silent --show-error \
+            "${{ secrets.DEV_HEALTH_URL }}"
+
+      # ==========================================================
+      # SUMMARY
+      # ==========================================================
+
+      - name: Deployment Summary
+        run: |
+          echo "## Development Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Status: ✅ Successful" >> "$GITHUB_STEP_SUMMARY"
+          echo "Image: $IMAGE" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_STEP_SUMMARY"

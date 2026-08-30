@@ -1,0 +1,187 @@
+name: Deploy Staging
+
+on:
+  workflow_run:
+    workflows:
+      - Deploy Dev
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: read
+  security-events: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  staging-security:
+    name: Staging Security Checks
+    runs-on: ubuntu-latest
+
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'develop'
+
+    steps:
+      # 1. Checkout exact commit
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # 3. Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      # 4. Install dependencies
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 5. Dependency scan
+      - name: Dependency Scan
+        uses: google/osv-scanner-action/osv-scanner-action@v2
+        with:
+          scan-args: |-
+            --lockfile=pnpm-lock.yaml
+
+      # ==========================================================
+      # IaC SECURITY
+      # ==========================================================
+
+      - name: Check for Terraform
+        id: terraform-check
+        run: |
+          if find . -name "*.tf" -not -path "./node_modules/*" | grep -q .; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: IaC Scan
+        if: steps.terraform-check.outputs.terraform == 'true'
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          soft_fail: false
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: staging-security
+
+    environment:
+      name: staging
+
+    steps:
+      # 1. Checkout exact commit
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # 2. Set immutable image
+      - name: Set Image
+        run: |
+          echo "IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_ENV"
+
+      # 3. Login to GHCR
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Verify image exists
+      - name: Verify Image
+        run: |
+          docker manifest inspect "$IMAGE"
+
+      # 5. Pull image
+      - name: Pull Image
+        run: |
+          docker pull "$IMAGE"
+
+      # 6. Verify image digest
+      - name: Verify Image Digest
+        run: |
+          docker inspect "$IMAGE" \
+            --format='Image digest: {{index .RepoDigests 0}}'
+
+      # ==========================================================
+      # DEPLOY
+      # ==========================================================
+
+      - name: Deploy to Staging
+        run: |
+          echo "Deploying $IMAGE to staging..."
+          echo "TODO: Replace with your deployment command."
+
+      # ==========================================================
+      # WAIT
+      # ==========================================================
+
+      - name: Wait for Deployment
+        run: |
+          echo "Waiting for staging deployment..."
+          sleep 30
+
+      # ==========================================================
+      # INTEGRATION TESTS
+      # ==========================================================
+
+      - name: Integration Tests
+        run: |
+          pnpm --filter identity-service test:integration
+
+      # ==========================================================
+      # API TESTS
+      # ==========================================================
+
+      - name: API Tests
+        run: |
+          pnpm --filter identity-service test:api
+
+      # ==========================================================
+      # PERFORMANCE TESTS
+      # ==========================================================
+
+      - name: Performance Tests
+        run: |
+          echo "Running performance tests..."
+          # Example:
+          # k6 run tests/performance/api.js
+
+      # ==========================================================
+      # DAST
+      # ==========================================================
+
+      - name: OWASP ZAP Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ secrets.STAGING_URL }}
+
+      # ==========================================================
+      # SUMMARY
+      # ==========================================================
+
+      - name: Deployment Summary
+        run: |
+          echo "## Staging Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Status: ✅ Successful" >> "$GITHUB_STEP_SUMMARY"
+          echo "Image: $IMAGE" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_STEP_SUMMARY"
